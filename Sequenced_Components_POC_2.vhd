@@ -4,15 +4,17 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity Sequenced_Components_POC_2 is
     Port (
-        oscena : in std_logic := '1';  -- Enable signal for the oscillator
-        led    : out std_logic         -- Output LED to blink
+        oscena : in std_logic := '1';
+        leds   : out std_logic_vector(7 downto 0)
     );
 end Sequenced_Components_POC_2;
 
 architecture Behavioral of Sequenced_Components_POC_2 is
 
-    signal clk_int : std_logic;                      -- internal oscillator clock
-    signal counter : unsigned(25 downto 0) := (others => '0');
+    signal clk_int  : std_logic;
+    signal slow_en  : std_logic := '0';
+    signal prescaler : unsigned(27 downto 0) := (others => '0');
+    signal count     : unsigned(7 downto 0) := (others => '0');
 
     component Internal_Oscillator
         port (
@@ -23,21 +25,25 @@ architecture Behavioral of Sequenced_Components_POC_2 is
 
 begin
 
-    -- Instantiate internal oscillator
     u0 : Internal_Oscillator
         port map (
             oscena => oscena,
             clkout => clk_int
         );
 
-    -- Blink LED using internal oscillator
     process(clk_int)
     begin
         if rising_edge(clk_int) then
-            counter <= counter + 1;
+            prescaler <= prescaler + 1;
+
+            -- Use a high-order bit as a slow enable
+            if prescaler(27) = '1' then
+                prescaler <= (others => '0');  -- Reset prescaler
+                count <= count + 1;            -- Increment slow counter
+            end if;
         end if;
     end process;
 
-    led <= counter(25);  -- Blink at visible rate
+    leds <= not std_logic_vector(count);
 
 end Behavioral;
