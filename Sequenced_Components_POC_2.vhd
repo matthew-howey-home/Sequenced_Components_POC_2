@@ -13,8 +13,9 @@ architecture Behavioral of Sequenced_Components_POC_2 is
 
     signal clk_int  : std_logic;
     signal slow_en  : std_logic := '0';
-    signal prescaler : unsigned(27 downto 0) := (others => '0');
+    signal prescaler : unsigned(26 downto 0) := (others => '0');
     signal count     : unsigned(7 downto 0) := (others => '0');
+	 signal prev_prescaler_bit : std_logic := '0';
 
     component Internal_Oscillator
         port (
@@ -30,19 +31,20 @@ begin
             oscena => oscena,
             clkout => clk_int
         );
+		  
+	process(clk_int)
+	begin
+		 if rising_edge(clk_int) then
+			  prescaler <= prescaler + 1;
 
-    process(clk_int)
-    begin
-        if rising_edge(clk_int) then
-            prescaler <= prescaler + 1;
+			  -- Detect rising edge of prescaler(25)
+			  if (prev_prescaler_bit = '0') and (prescaler(25) = '1') then
+					count <= count + 1;
+			  end if;
 
-            -- Use a high-order bit as a slow enable
-            if prescaler(27) = '1' then
-                prescaler <= (others => '0');  -- Reset prescaler
-                count <= count + 1;            -- Increment slow counter
-            end if;
-        end if;
-    end process;
+			  prev_prescaler_bit <= prescaler(25);
+		 end if;
+	end process;
 
     leds <= not std_logic_vector(count);
 
