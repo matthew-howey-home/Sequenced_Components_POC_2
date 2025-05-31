@@ -6,22 +6,28 @@ entity Sequenced_Components_POC_2 is
     Port (
         oscena : in std_logic := '1';
         leds   : out std_logic_vector(7 downto 0)
-	);
+    );
 end Sequenced_Components_POC_2;
 
 architecture Behavioral of Sequenced_Components_POC_2 is
 
     signal clk_int   : std_logic;
-    signal prescaler : unsigned(26 downto 0) := (others => '0');
-    signal count     : std_logic_vector(7 downto 0) := (others => '0');  -- 8-bit count as std_logic_vector
+    signal slow_clock_out : std_logic;
+    signal count     : std_logic_vector(7 downto 0) := (others => '0');
     signal adder_out : std_logic_vector(7 downto 0);
     signal carry_out : std_logic;
-    signal prev_prescaler_bit : std_logic := '0';
 
     component Internal_Oscillator
         port (
             oscena : in  std_logic;
             clkout : out std_logic
+        );
+    end component;
+
+    component Slow_Clock
+        port (
+            clk      : in  std_logic;
+            slow_clock  : out std_logic
         );
     end component;
 
@@ -37,37 +43,40 @@ architecture Behavioral of Sequenced_Components_POC_2 is
 
 begin
 
-    -- instantiate oscillator
-    u0: Internal_Oscillator
+    -- Internal oscillator
+    u_osc: Internal_Oscillator
         port map (
             oscena => oscena,
             clkout => clk_int
         );
 
-    -- instantiate adder
+    -- Clock divider
+    u_slow_clock: Slow_Clock
+        port map (
+            clk     => clk_int,
+            slow_clock => slow_clock_out
+        );
+
+    -- Adder
     u_adder: ADD_Component
         port map (
             input_1   => count,
-            input_2   => (7 downto 1 => '0') & '1',  -- adding 1 (00000001)
+            input_2   => (7 downto 1 => '0') & '1',  -- add 1
             carry_in  => '0',
             output    => adder_out,
             carry_out => carry_out
         );
 
+    -- Count update using enable signal from divider
     process(clk_int)
     begin
         if rising_edge(clk_int) then
-            prescaler <= prescaler + 1;
-
-            -- Rising edge detect on prescaler(26)
-            if (prev_prescaler_bit = '0') and (prescaler(26) = '1') then
-                count <= adder_out;  -- update count with adder result
+            if slow_clock_out = '1' then
+                count <= adder_out;
             end if;
-
-            prev_prescaler_bit <= prescaler(26);
         end if;
     end process;
 
-    leds <= not count;  -- drive LEDs
+    leds <= not count;
 
 end Behavioral;
