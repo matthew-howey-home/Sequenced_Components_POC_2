@@ -40,6 +40,15 @@ architecture Behavioral of Sequenced_Components_POC_2 is
             carry_out : out std_logic
         );
     end component;
+	 
+	 component Register_with_enable
+			port (
+				clk   		: in  std_logic;
+				enable    : in  std_logic;
+				data_in   : in  std_logic_vector(7 downto 0);
+				data_out  : out std_logic_vector(7 downto 0)
+			);
+	 end component;
 
 begin
 
@@ -66,16 +75,15 @@ begin
             output    => adder_out,
             carry_out => carry_out
         );
-
-    -- Count update using enable signal from divider
-    process(clk_int)
-    begin
-        if rising_edge(clk_int) then
-            if slow_clock_out = '1' then
-                count <= adder_out;
-            end if;
-        end if;
-    end process;
+		  
+	  -- Register
+	  u_register: Register_with_enable
+		  port map (
+				clk		=> clk_int,
+				enable 	=> slow_clock_out,
+				data_in	=>	adder_out,
+				data_out => count
+		  );
 
     leds <= not count;
 
