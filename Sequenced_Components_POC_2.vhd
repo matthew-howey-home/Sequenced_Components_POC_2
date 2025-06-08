@@ -5,6 +5,7 @@ use IEEE.NUMERIC_STD.ALL;
 entity Sequenced_Components_POC_2 is
     Port (
         oscena : in std_logic := '1';
+		  reset	: in std_logic;
         leds   : out std_logic_vector(7 downto 0)
     );
 end Sequenced_Components_POC_2;
@@ -16,6 +17,7 @@ architecture Behavioral of Sequenced_Components_POC_2 is
     signal count     : std_logic_vector(7 downto 0) := (others => '0');
     signal adder_out : std_logic_vector(7 downto 0);
     signal carry_out : std_logic;
+	 signal register_in: std_logic_vector(7 downto 0);
 
     component Internal_Oscillator
         port (
@@ -49,6 +51,15 @@ architecture Behavioral of Sequenced_Components_POC_2 is
 				data_out  : out std_logic_vector(7 downto 0)
 			);
 	 end component;
+	 
+	 component Two_To_One_Byte_Mux
+			port (
+				input_1		: in std_logic_vector(7 downto 0);
+				input_2		: in std_logic_vector(7 downto 0);
+				selector		: in std_logic;
+				output		: out std_logic_vector(7 downto 0)
+			);
+	 end component;
 
 begin
 
@@ -76,14 +87,24 @@ begin
             carry_out => carry_out
         );
 		  
+	  -- Mux (reset / adder out)
+	  u_mux: Two_To_One_Byte_Mux
+		  port map (
+				input_1	=> adder_out,
+				input_2  => (7 downto 0 => '0'),
+				selector => reset,
+				output	=> register_in
+		  );
+		  
 	  -- Register
 	  u_register: Register_with_enable
 		  port map (
 				clk		=> clk_int,
 				enable 	=> slow_clock_out,
-				data_in	=>	adder_out,
+				data_in	=>	register_in,
 				data_out => count
 		  );
+	  
 
     leds <= not count;
 
