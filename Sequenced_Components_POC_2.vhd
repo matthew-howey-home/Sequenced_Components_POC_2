@@ -3,6 +3,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
 entity Sequenced_Components_POC_2 is
+
     Port (
         oscena : in std_logic := '1';
 		  reset	: in std_logic;
@@ -18,6 +19,7 @@ architecture Behavioral of Sequenced_Components_POC_2 is
     signal adder_out : std_logic_vector(7 downto 0);
     signal carry_out : std_logic;
 	 signal register_in: std_logic_vector(7 downto 0);
+	 signal memory_out	: std_logic_vector(7 downto 0);
 
     component Internal_Oscillator
         port (
@@ -58,6 +60,20 @@ architecture Behavioral of Sequenced_Components_POC_2 is
 				input_2		: in std_logic_vector(7 downto 0);
 				selector		: in std_logic;
 				output		: out std_logic_vector(7 downto 0)
+			);
+	 end component;
+	 
+	 component RAM
+			generic (
+				DATA_WIDTH : integer := 8;
+				ADDR_WIDTH : integer := 8
+			);
+			port (
+				clk      		: in  std_logic;
+				write_enable   : in  std_logic;
+				address     	: in  std_logic_vector(ADDR_WIDTH - 1 downto 0);
+				data_in  		: in  std_logic_vector(DATA_WIDTH - 1 downto 0);
+				data_out 		: out std_logic_vector(DATA_WIDTH - 1 downto 0)
 			);
 	 end component;
 
@@ -103,6 +119,16 @@ begin
 				enable 	=> slow_clock_out,
 				data_in	=>	register_in,
 				data_out => count
+		  );
+		
+		-- RAM:
+		u_ram: RAM
+		  port map (
+				clk				=> clk_int,
+				write_enable 	=> '0',
+				address			=> count,
+				data_in 			=> (7 downto 0 => '0'),
+				data_out			=> memory_out
 		  );
 	  
 
