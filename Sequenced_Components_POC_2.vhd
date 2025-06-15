@@ -132,6 +132,7 @@ begin
 		  );
 	  
 
-    leds <= not count;
+    -- leds <= not count;
+	 leds <= not memory_out;
 
 end Behavioral;
