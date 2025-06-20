@@ -71,6 +71,7 @@ architecture Behavioral of Sequenced_Components_POC_2 is
 			port (
 				clk      		: in  std_logic;
 				write_enable   : in  std_logic;
+				read_enable   	: in  std_logic;
 				address     	: in  std_logic_vector(ADDR_WIDTH - 1 downto 0);
 				data_in  		: in  std_logic_vector(DATA_WIDTH - 1 downto 0);
 				data_out 		: out std_logic_vector(DATA_WIDTH - 1 downto 0)
@@ -125,6 +126,7 @@ begin
 		u_ram: RAM
 		  port map (
 				clk				=> clk_int,
+				read_enable 	=> '0', -- active low, 0 means enable
 				write_enable 	=> '1', -- active low, 1 means don't enable
 				address			=> count,
 				data_in 			=> (7 downto 0 => '0'),

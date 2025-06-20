@@ -10,6 +10,7 @@ entity RAM is
     port (
         clk      				: in  std_logic;
         write_enable       : in  std_logic; -- active low, 0 means enable
+		  read_enable  		: in  std_logic; -- active low, 0 means enable
         address  				: in  std_logic_vector(ADDR_WIDTH - 1 downto 0);
         data_in  				: in  std_logic_vector(DATA_WIDTH - 1 downto 0);
         data_out 				: out std_logic_vector(DATA_WIDTH - 1 downto 0)
@@ -33,6 +34,8 @@ architecture Behavioral of RAM is
 
     -- Internal memory initialized with program
     signal RAM : ram_type := INIT_MEM;
+	 
+	 signal read_data : std_logic_vector(DATA_WIDTH - 1 downto 0);
 
 begin
     -- Synchronous write
@@ -45,7 +48,10 @@ begin
         end if;
     end process;
 
-    -- Asynchronous (combinational) read
-    data_out <= RAM(to_integer(unsigned(address)));
+    -- Combinational read
+    read_data <= RAM(to_integer(unsigned(address)));
+
+    -- Tri-state bus drive logic (read_enable is active low, so 0 means enable)
+    data_out <= read_data when read_enable = '0' else (others => 'Z');
 
 end architecture Behavioral;
