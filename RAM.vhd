@@ -9,7 +9,7 @@ entity RAM is
     );
     port (
         clk      				: in  std_logic;
-        write_enable       : in  std_logic;
+        write_enable       : in  std_logic; -- active low, 0 means enable
         address  				: in  std_logic_vector(ADDR_WIDTH - 1 downto 0);
         data_in  				: in  std_logic_vector(DATA_WIDTH - 1 downto 0);
         data_out 				: out std_logic_vector(DATA_WIDTH - 1 downto 0)
@@ -39,7 +39,7 @@ begin
     process(clk)
     begin
         if rising_edge(clk) then
-            if write_enable = '1' then
+            if write_enable = '0' then
                 RAM(to_integer(unsigned(address))) <= data_in;
             end if;
         end if;

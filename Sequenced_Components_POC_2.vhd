@@ -125,7 +125,7 @@ begin
 		u_ram: RAM
 		  port map (
 				clk				=> clk_int,
-				write_enable 	=> '0',
+				write_enable 	=> '1', -- active low, 1 means don't enable
 				address			=> count,
 				data_in 			=> (7 downto 0 => '0'),
 				data_out			=> memory_out
