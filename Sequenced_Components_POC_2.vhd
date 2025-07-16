@@ -15,11 +15,13 @@ architecture Behavioral of Sequenced_Components_POC_2 is
 
     signal clk_int   : std_logic;
     signal slow_clock_out : std_logic;
+	 signal prescaler23	: std_logic;
     signal count     : std_logic_vector(7 downto 0) := (others => '0');
     signal adder_out : std_logic_vector(7 downto 0);
     signal carry_out : std_logic;
 	 signal register_in: std_logic_vector(7 downto 0);
 	 signal memory_out	: std_logic_vector(7 downto 0);
+ 
 
     component Internal_Oscillator
         port (
@@ -31,7 +33,9 @@ architecture Behavioral of Sequenced_Components_POC_2 is
     component Slow_Clock
         port (
             clk      : in  std_logic;
-            slow_clock  : out std_logic
+            slow_clock  : out std_logic;
+				-- visible bit for debugging
+				prescaler23	: out std_logic
         );
     end component;
 
@@ -47,10 +51,11 @@ architecture Behavioral of Sequenced_Components_POC_2 is
 	 
 	 component Register_with_enable
 			port (
-				clk   		: in  std_logic;
-				enable    : in  std_logic;
-				data_in   : in  std_logic_vector(7 downto 0);
-				data_out  : out std_logic_vector(7 downto 0)
+				clk   			: in  std_logic;
+				write_enable   : in  std_logic;
+				output_enable	: in 	std_logic;
+				data_in   		: in  std_logic_vector(7 downto 0);
+				data_out  		: out std_logic_vector(7 downto 0)
 			);
 	 end component;
 	 
@@ -91,7 +96,8 @@ begin
     u_slow_clock: Slow_Clock
         port map (
             clk     => clk_int,
-            slow_clock => slow_clock_out
+            slow_clock => slow_clock_out,
+				prescaler23 => prescaler23
         );
 
     -- Adder
@@ -116,10 +122,11 @@ begin
 	  -- Register
 	  u_register: Register_with_enable
 		  port map (
-				clk		=> clk_int,
-				enable 	=> slow_clock_out,
-				data_in	=>	register_in,
-				data_out => count
+				clk				=> clk_int,
+				write_enable 	=> slow_clock_out,
+				output_enable	=> '1',
+				data_in			=>	register_in,
+				data_out 		=> count
 		  );
 		
 		-- RAM:
@@ -135,6 +142,8 @@ begin
 	  
 
     -- leds <= not count;
-	 leds <= not memory_out;
+	 -- leds <= not memory_out;
+	 leds(7 downto 1) <= (others => '1');
+	 leds(0) <= not prescaler23;
 
 end Behavioral;
